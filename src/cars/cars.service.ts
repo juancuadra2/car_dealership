@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Car } from '../dtos/car.interface';
+import { v4 as uuid } from 'uuid';
+import { Car } from './interfaces/car.interface';
+import { CreateCarDto, UpdateCarDto } from './dto';
 
 @Injectable()
 export class CarsService {
@@ -7,32 +9,39 @@ export class CarsService {
   findAll(): Car[] {
     return this.cars;
   }
-  findById(id: number): Car {
+  findById(id: string): Car {
     const car = this.cars.find((car: Car) => car.id === id);
     if (!car) {
       throw new NotFoundException('Car not found.');
     }
     return car;
   }
-  create(car: Car): Car {
-    this.cars.push(car);
+  create(createCarDto: CreateCarDto): Car {
+    const car: Car = {
+      id: uuid(),
+      name: createCarDto.name,
+    };
+    this.cars.push(<Car>car);
     return car;
   }
-  update(id: number, car: Car): Car {
-    const index = this.cars.findIndex((car: Car) => car.id === id);
-    this.cars[index] = car;
-    const updatedCar = this.cars[index];
-    if (!updatedCar) {
-      throw new NotFoundException('Car not found.');
-    }
-    return updatedCar;
+  update(id: string, updateCarDto: UpdateCarDto): Car {
+    let carFound = this.findById(id);
+    this.cars = this.cars.map((car: Car) => {
+      if (car.id === id) {
+        carFound = {
+          ...carFound,
+          ...updateCarDto,
+          id,
+        };
+        return carFound;
+      }
+      return car;
+    });
+    return carFound;
   }
-  delete(id: number): Car[] {
-    const index = this.cars.findIndex((car: Car) => car.id === id);
-    const deletedCar = this.cars.splice(index, 1);
-    if (deletedCar.length <= 0) {
-      throw new NotFoundException('Car not found.');
-    }
-    return deletedCar;
+  delete(id: string): Car {
+    const car = this.findById(id);
+    this.cars = this.cars.filter((car: Car) => car.id !== id);
+    return car;
   }
 }

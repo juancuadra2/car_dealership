@@ -5,13 +5,14 @@ import {
   Get,
   HttpStatus,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Put,
   Res,
 } from '@nestjs/common';
 import { CarsService } from './cars.service';
-import { Car } from '../dtos/car.interface';
+import { Car } from './interfaces/car.interface';
+import { CreateCarDto, UpdateCarDto } from './dto';
 
 @Controller('cars')
 export class CarsController {
@@ -21,19 +22,22 @@ export class CarsController {
     return this.carsService.findAll();
   }
   @Get('/:id')
-  getById(@Param('id', ParseIntPipe) id: number): Car {
+  getById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Car {
     return this.carsService.findById(id);
   }
   @Post()
-  create(@Body() car: Car) {
+  create(@Body() car: CreateCarDto) {
     return this.carsService.create(car);
   }
   @Put('/:id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() car: Car): Car {
+  update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() car: UpdateCarDto,
+  ): Car {
     return this.carsService.update(id, car);
   }
   @Delete('/:id')
-  delete(@Param('id', ParseIntPipe) id, @Res() res) {
+  delete(@Param('id', ParseUUIDPipe) id: string, @Res() res) {
     this.carsService.delete(id);
     return res.status(HttpStatus.OK).send({
       message: 'Car deleted successful.',
